@@ -2,16 +2,17 @@ class Node:
     """링크드 리스트의 노드 클래스"""
 
     def __init__(self, data):
-        self.data = data  # 실제 노드가 저장하는 데이터
-        self.next = None  # 다음 노드에 대한 레퍼런스
+        self.data = data # 실제 노드가 저장하는 데이터
+        self.next = None # 다음 노드에 대한 레퍼런스
+        self.prev = None # 이전 노드에 대한 레퍼런스
 
 
 class LinkedList:
     """링크드 리스트 클래스"""
 
     def __init__(self):
-        self.head = None  # 링크드 리스트의 가장 앞 노드
-        self.tail = None  # 링크드 리스트의 가장 뒤 노드
+        self.head = None # 링크드 리스트의 가장 앞 노드
+        self.tail = None # 링크드 리스트의 가장 뒤 노드
 
     def find_node_with_data(self, data):
         """링크드 리스트에서 탐색 연산 메소드. 단, 해당 노드가 없으면 None을 리턴한다"""
@@ -45,8 +46,9 @@ class LinkedList:
             self.tail = new_node
         # 링크드 리스트가 비어 있지 않으면
         else:
-            self.tail.next = new_node  # 가장 마지막 노드 뒤에 새로운 노드를 추가하고
-            self.tail = new_node  # 마지막 노드를 추가한 노드로 바꿔준다
+            self.tail.next = new_node
+            new_node.prev = self.tail
+            self.tail = new_node
 
     def prepend(self, data):
         """링크드 리스트의 가장 앞에 데이터 삽입"""
@@ -58,6 +60,7 @@ class LinkedList:
             self.tail = new_node
         else:
             new_node.next = self.head
+            self.head.prev = new_node
             self.head = new_node
 
     def insert_after(self, previous_node, data):
@@ -65,38 +68,41 @@ class LinkedList:
         new_node = Node(data)
 
         if previous_node is self.tail:
-            self.tail.next = new_node
+            previous_node.next = new_node
+            new_node.prev = previous_node
             self.tail = new_node
 
         else:
+            new_node.prev = previous_node
             new_node.next = previous_node.next
             previous_node.next = new_node
+            previous_node.next.prev = new_node
 
-    def delete_after(self, previous_node):
-        """링크드 리스트 삭제 연산. 주어진 노드 뒤 노드를 삭제한다"""
-        data = previous_node.next.data
+    def delete(self, node_to_delete):
+        """더블리 링크드 리스트 삭제 연산 메소드"""
 
-        if previous_node.next is self.tail:
-            previous_node.next = None
-            self.tail = previous_node
-
-        else:
-            previous_node.next = previous_node.next.next
-
-        return data
-
-    def pop_left(self):
-        """링크드 리스트의 가장 앞 노드 삭제 메소드. 단, 링크드 리스트에 항상 노드가 있다고 가정한다"""
-        data = self.head.data  # 삭제할 노드를 미리 저장해놓는다
-
-        # 지우려는 데이터가 링크드 리스트의 마지막 남은 데이터일 때
-        if self.head is self.tail:
-            self.head = None
+        # 링크드 리스트에서 마지막 남은 데이터를 삭제할 때
+        if node_to_delete is self.head and node_to_delete is self.tail:
             self.tail = None
-        else:
-            self.head = self.head.next
+            self.head = None
 
-        return data  # 삭제된 노드의 데이터를 리턴한다
+        # 링크드 리스트 가장 앞 데이터 삭제할 때
+        elif node_to_delete is self.head:
+            self.head = self.head.next
+            self.head.prev = None
+
+        # 링크드 리스트 가장 뒤 데이터 삭제할 떄
+        elif node_to_delete is self.tail:
+            self.tail = self.tail.prev
+            self.tail.next = None
+
+        # 두 노드 사이에 있는 데이터 삭제할 때
+        else:
+            node_to_delete.prev.next = node_to_delete.next
+            node_to_delete.next.prev = node_to_delete.prev
+
+        # 삭제하는 노드 데이터 리턴
+        return node_to_delete.data
 
     def __str__(self):
         """링크드  리스트를 문자열로 표현해서 리턴하는 메소드"""
@@ -113,24 +119,33 @@ class LinkedList:
 
         return res_str
 
-
 # 새로운 링크드 리스트 생성
-linked_list = LinkedList()
+my_list = LinkedList()
 
-# 여러 데이터를 링크드 리스트 앞에 추가
-linked_list.prepend(11)
-linked_list.prepend(7)
-linked_list.prepend(5)
-linked_list.prepend(3)
-linked_list.prepend(2)
+# 새로운 노드 4개 추가
+my_list.append(2)
+my_list.append(3)
+my_list.append(5)
+my_list.append(7)
 
-# 가장 앞 노드 계속 삭제
-print(linked_list.pop_left())
-print(linked_list.pop_left())
-print(linked_list.pop_left())
-print(linked_list.pop_left())
-print(linked_list.pop_left())
+print(my_list)
 
-print(linked_list)  # 링크드 리스트 출력
-print(linked_list.head)
-print(linked_list.tail)
+# 두 노드 사이에 있는 노드 삭제
+node_at_index_2 = my_list.find_node_at(2)
+my_list.delete(node_at_index_2)
+print(my_list)
+
+# 가장 앞 노드 삭제
+head_node = my_list.head
+print(my_list.delete(head_node))
+print(my_list)
+
+# 가장 뒤 노드 삭제
+tail_node = my_list.tail
+my_list.delete(tail_node)
+print(my_list)
+
+# 마지막 노드 삭제
+last_node = my_list.head
+my_list.delete(last_node)
+print(my_list)
